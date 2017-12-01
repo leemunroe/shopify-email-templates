@@ -1,0 +1,38 @@
+<p>{{ service_name }},</p>
+<br>
+<p>Please fulfill order {{ name }}.</p>
+<p>Total number of items: {{ fulfillment.item_count }}</p>
+<p>Unique items: {{ fulfillment.fulfillment_line_items.size }}</p>
+<br>
+<p><strong>Items to fulfill:</strong></p>
+{% for line in fulfillment.fulfillment_line_items %}
+  <p>Variant Title: {{ line.line_item.title }}</p>
+  <p>SKU: {{ line.line_item.sku }}</p>
+  <p>Quantity: {{ line.quantity }}</p>
+  <p>Grams: {{ line.line_item.grams }}</p>
+  <p>Vendor: {{ line.line_item.vendor }}</p>
+{% endfor %}
+{% if shipping_address %}
+<br>
+<p><strong>Shipping Address:</strong></p>
+<p>{{ shipping_address.name }}{% if shipping_address.company %}
+  {{ shipping_address.company }}{% endif %}</p>
+<p>{{ shipping_address.address1 }}</p>
+<p>{{ shipping_address.address2 }}</p>
+<p>{{ shipping_address.city }}, {{ shipping_address.province }}</p>
+<p>{{ shipping_address.zip }}</p>
+<p>{{ shipping_address.country }}</p>
+{% if shipping_address.phone %}<p>Phone: {{ shipping_address.phone }}</p>{% endif %}
+{% endif %}
+<br>
+<p><strong>Shipping Method:</strong></p>
+<p>{% if shipping_method %}{{ shipping_method.title }}{% else %}None{% endif %}</p>
+<br>
+<p><strong>Tracking Number:</strong></p>
+<p>{% if fulfillment.tracking_number %}{{ fulfillment.tracking_number }}{% else %}None{% endif %}</p>
+<br>
+<p><strong>Customer Email:</strong></p>
+<p>{{ email }}</p>
+<br>
+<p>Thank you,</p>
+<p>{{ shop_name }}</p>

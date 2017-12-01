@@ -1,0 +1,31 @@
+<p>Hello {{ shop_name }},</p>
+<p></p>
+<p>{% if customer.name %}{{ customer.name }}{% else %}Someone{% endif %} placed a new order with your store, {{ date | date: "%b %d %I:%M%p" }}:</p>
+<p></p>
+<ul>  {% for line in line_items %} <li> <img src="{{ line | img_url: 'thumb' }}" /> {{ line.quantity }}x {{ line.title }} {% if line.sku != "" %}(SKU: {{line.sku}}){% endif %} for {{ line.price | money }} each </li> {% endfor %} </ul>
+<a href="https://{{ shop.permanent_domain }}/admin/orders/{{ id }}">View order {{order_name}} </a>
+{% if fulfillment_aborted %}
+<p>The above order was not automatically fulfilled because it was flagged as suspicious.</p>{% endif %}
+<p></p><br>
+{% if has_high_risks? %}<p><b>Security check:</b></p>
+<p>This order has a risk of being fraudulent. Review the order in your store's admin and contact the customer to verify their information.</p>
+<p></p>{% endif %}
+<p><b>Payment processing method:</b></p>
+<p>{{ gateway }}</p>
+<p></p>
+{% if requires_shipping and shipping_address %}
+<p><b>Delivery method:</b></p>
+{% for shipping_method in shipping_methods %}<p>{{ shipping_method.title }}</p>{% endfor %}
+<p></p>
+<p><b>Shipping address:</b></p>
+<p>{{ shipping_address.name }}</p>
+<p>{{ shipping_address.street }}</p>
+<p>{{ shipping_address.city }}, {{ shipping_address.province }}  {{ shipping_address.zip }}</p>
+<p>{{ shipping_address.country }}</p>
+<p>{{ shipping_address.phone }}{% endif %}</p>
+<p></p>
+
+{% if shopify_shipping_enabled %}
+<p>Save time and money by <a href="{{ fulfillment_url }}">fulfilling with Shopify Shipping</a></p>
+<p></p>
+{% endif %}
