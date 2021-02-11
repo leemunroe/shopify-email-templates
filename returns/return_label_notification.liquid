@@ -1,6 +1,8 @@
-{% capture email_title %}Your shipping status has been updated {% endcapture %}
-{% capture email_body %}The following items have been updated with new shipping information.{% endcapture %}
-
+<!--
+  Return label instructions
+  Sent to the customer after creating a return label.
+  Subject: Return label for order {{ order.name }}
+-->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -41,7 +43,7 @@
 
                     <td class="order-number__cell">
                       <span class="order-number__text">
-                        Order {{ order_name }}
+                        Order {{ order.name }}
                       </span>
                     </td>
                 </tr>
@@ -64,22 +66,22 @@
           <tr>
             <td>
               
-            <h2>{{ email_title }}</h2>
-            <p>{{ email_body }}</p>
-            <p>{{ email_emphasis }}</p>
-            {% if order_status_url %}
-              <table class="row actions">
+            <h2>Your return label is ready</h2>
+            <table class="row actions">
+  <tr>
+    <td class="empty-line"> </td>
+  </tr>
   <tr>
     <td class="actions__cell">
       <table class="button main-action-cell">
         <tr>
-          <td class="button__cell"><a href="{{ order_status_url }}" class="button__text">View your order</a></td>
+          <td class="button__cell"><a href="{{ return_label.public_file_url }}" class="button__text">Print return label</a></td>
         </tr>
       </table>
       {% if shop.url %}
     <table class="link secondary-action-cell">
       <tr>
-        <td class="link__cell"><a href="{{ shop.url }}" class="link__text"><span class='or'>or</span> Visit our store</a></td>
+        <td class="link__cell">or <a href="{{ shop.url }}">Visit our store</a></td>
       </tr>
     </table>
 {% endif %}
@@ -88,22 +90,6 @@
   </tr>
 </table>
 
-            {% else %}
-              {% if shop.url %}
-    <table class="row actions">
-      <tr>
-        <td class="actions__cell">
-          <table class="button main-action-cell">
-            <tr>
-              <td class="button__cell"><a href="{{ shop.url }}" class="button__text">Visit our store</a></td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-{% endif %}
-
-            {% endif %}
 
             </td>
           </tr>
@@ -112,7 +98,6 @@
     </td>
   </tr>
 </table>
-
           <table class="row section">
   <tr>
     <td class="section__cell">
@@ -120,7 +105,7 @@
         <table class="container">
           <tr>
             <td>
-              <h3>Items in this shipment</h3>
+              <h3>Instructions</h3>
             </td>
           </tr>
         </table>
@@ -128,41 +113,11 @@
           <tr>
             <td>
               
-            
-<table class="row">
-  {% for line in fulfillment.fulfillment_line_items %}
-  <tr class="order-list__item">
-    <td class="order-list__item__cell">
-      <table>
-        <td>
-          {% if line.line_item.image %}
-            <img src="{{ line.line_item | img_url: 'compact_cropped' }}" align="left" width="60" height="60" class="order-list__product-image"/>
-          {% endif %}
-        </td>
-        <td class="order-list__product-description-cell">
-          {% if line.line_item.product.title %}
-            {% assign line_title = line.line_item.product.title %}
-          {% else %}
-            {% assign line_title = line.line_item.title %}
-          {% endif %}
-
-          {% if line.quantity < line.line_item.quantity %}
-            {% capture line_display %} {{ line.quantity }} of {{ line.line_item.quantity }} {% endcapture %}
-          {% else %}
-            {% assign line_display = line.line_item.quantity  %}
-          {% endif %}
-
-          <span class="order-list__item-title">{{ line_title }} × {{ line_display }}</span><br/>
-
-          {% if line.line_item.variant.title != 'Default Title' %}
-            <span class="order-list__item-variant">{{ line.line_item.variant.title }}</span>
-          {% endif %}
-        </td>
-      </table>
-    </td>
-  </tr>{% endfor %}
-</table>
-
+            <ol>
+              <li class="return-label__instruction-step">Pack the items you're returning.</li>
+              <li class="return-label__instruction-step">Print your return label and attach it to the package. Cover any existing shipping labels.</li>
+              <li class="return-label__instruction-step">Give the package to the carrier identified on the label.</li>
+            </ol>
 
             </td>
           </tr>
@@ -171,7 +126,6 @@
     </td>
   </tr>
 </table>
-
           <table class="row footer">
   <tr>
     <td class="footer__cell">
@@ -179,6 +133,7 @@
         <table class="container">
           <tr>
             <td>
+              
               <p class="disclaimer__subtext">If you have any questions, reply to this email or contact us at <a href="mailto:{{ shop.email }}">{{ shop.email }}</a></p>
             </td>
           </tr>

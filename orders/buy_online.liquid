@@ -1,3 +1,8 @@
+<!--
+  Email cart from POS
+  Sent to the customer when you email their cart from POS. Includes a link to buy online.
+  Subject: Buy online from {{ shop_name }} when you're ready!
+-->
 {% capture email_title %}Are you ready to complete your order?{% endcapture %}
 
 <!DOCTYPE html>
@@ -33,7 +38,7 @@
                       <img src="{{shop.email_logo_url}}" alt="{{ shop.name }}" width="{{ shop.email_logo_width }}">
                     {%- else %}
                       <h1 class="shop-name__text">
-                        Thanks for stopping by <a href="{{shop.url}}">{{ shop.name }}</a>!
+                        Thanks for stopping by <a href="{{ shop.url }}">{{ shop.name }}</a>
                       </h1>
                     {%- endif %}
                   </td>
@@ -100,7 +105,7 @@
               
             
 <table class="row">
-  {% for line in line_items %}
+  {% for line in subtotal_line_items %}
   <tr class="order-list__item">
     <td class="order-list__item__cell">
       <table>
@@ -110,10 +115,10 @@
           {% endif %}
         </td>
         <td class="order-list__product-description-cell">
-          {% if line.product.title %}
-            {% assign line_title = line.product.title %}
-          {% else %}
-            {% assign line_title = line.title %}
+          {% if line.product.title %}	
+            {% assign line_title = line.product.title %}	
+          {% else %}	
+            {% assign line_title = line.title %}	
           {% endif %}
 
           {% if line.quantity < line.quantity %}
@@ -122,17 +127,45 @@
             {% assign line_display = line.quantity  %}
           {% endif %}
 
-          <span class="order-list__item-title">{{ line_title }} × {{ line_display }}</span><br/>
+          <span class="order-list__item-title">{{ line_title }} × {{ line_display }}</span><br/>
 
           {% if line.variant.title != 'Default Title' %}
-            <span class="order-list__item-variant">{{ line.variant.title }}</span>
+            <span class="order-list__item-variant">{{ line.variant.title }}</span><br/>
+          {% endif %}
+
+          {% if line.selling_plan_allocation %}
+            <span class="order-list__item-variant">{{ line.selling_plan_allocation.selling_plan.name }}</span><br/>
+          {% endif %}
+
+          {% if line.refunded_quantity > 0 %}
+            <span class="order-list__item-refunded">Refunded</span>
+          {% endif %}
+
+          {% if line.discount_allocations %}
+            {% for discount_allocation in line.discount_allocations %}
+              {% if discount_allocation.discount_application.target_selection != 'all' %}
+                <span class="order-list__item-discount-allocation">
+                  <img src="{{ 'notifications/discounttag.png' | shopify_asset_url }}" width="18" height="18" class="discount-tag-icon" />
+                  <span>
+                    {{ discount_allocation.discount_application.title | upcase }}
+                    (-{{ discount_allocation.amount | money }})
+                  </span>
+                </span>
+              {% endif %}
+            {% endfor %}
           {% endif %}
         </td>
           <td class="order-list__price-cell">
-            {% if line.original_line_price != line.line_price %}
+            {% if line.original_line_price != line.final_line_price %}
               <del class="order-list__item-original-price">{{ line.original_line_price | money }}</del>
             {% endif %}
-            <p class="order-list__item-price">{{ line.line_price | money }}</p>
+            <p class="order-list__item-price">
+              {% if line.final_line_price > 0 %}
+                {{ line.final_line_price | money }}
+              {% else %}
+                Free
+              {% endif %}
+            </p>
           </td>
       </table>
     </td>
@@ -144,21 +177,33 @@
     <td class="subtotal-spacer"></td>
     <td>
       <table class="row subtotal-table">
-        {% if discounts %}
-          {% capture discount_title %}Discount {% if discounts.first.code %}({{ discounts.first.code }}){% endif %}{% endcapture %}
-          
+        {% for discount_application in discount_applications %}
+          {% if discount_application.target_selection == 'all' %}
+            {% capture discount_title %}
+              {% if discount_application.title %}
+                {{ discount_application.title | upcase }}
+              {% else %}
+                Discount
+              {% endif %}
+            {% endcapture %}
+            
 <tr class="subtotal-line">
   <td class="subtotal-line__title">
     <p>
-      <span>{{ discount_title }}</span>
+      <span>Discount</span>
+        <span class="subtotal-line__discount">
+          <img src="{{ 'notifications/discounttag.png' | shopify_asset_url }}" width="18" height="18" class="discount-tag-icon" />
+          <span class="subtotal-line__discount-title">{{ discount_title }}</span>
+        </span>
     </p>
   </td>
   <td class="subtotal-line__value">
-    <strong>{{ discounts_savings | money }}</strong>
+    <strong>-{{ discount_application.total_allocated_amount | money }}</strong>
   </td>
 </tr>
 
-        {% endif %}
+          {% endif %}
+        {% endfor %}
 
         
 <tr class="subtotal-line">
@@ -172,7 +217,21 @@
   </td>
 </tr>
 
-        
+        {% if delivery_method == 'pick-up' %}
+          
+<tr class="subtotal-line">
+  <td class="subtotal-line__title">
+    <p>
+      <span>Pickup</span>
+    </p>
+  </td>
+  <td class="subtotal-line__value">
+    <strong>{{ shipping_price | money }}</strong>
+  </td>
+</tr>
+
+        {% else %}
+          
 <tr class="subtotal-line">
   <td class="subtotal-line__title">
     <p>
@@ -184,21 +243,50 @@
   </td>
 </tr>
 
+        {% endif %}
 
-        {% for line in tax_lines %}
+        {% if current_total_duties %}
           
 <tr class="subtotal-line">
   <td class="subtotal-line__title">
     <p>
-      <span>{{ line.title }}</span>
+      <span>Duties</span>
     </p>
   </td>
   <td class="subtotal-line__value">
-    <strong>{{ line.price | money }}</strong>
+    <strong>{{ current_total_duties | money }}</strong>
   </td>
 </tr>
 
-        {% endfor %}
+        {% endif %}
+
+        
+<tr class="subtotal-line">
+  <td class="subtotal-line__title">
+    <p>
+      <span>Taxes</span>
+    </p>
+  </td>
+  <td class="subtotal-line__value">
+    <strong>{{ tax_price | money }}</strong>
+  </td>
+</tr>
+
+
+        {% if total_tip and total_tip > 0 %}
+          
+<tr class="subtotal-line">
+  <td class="subtotal-line__title">
+    <p>
+      <span>Tip</span>
+    </p>
+  </td>
+  <td class="subtotal-line__value">
+    <strong>{{ total_tip | money }}</strong>
+  </td>
+</tr>
+
+        {% endif %}
       </table>
       <table class="row subtotal-table subtotal-table--total">
         
@@ -215,14 +303,22 @@
 
       </table>
 
+      {% if total_discounts > 0 %}
+        <p class="total-discount">
+          You saved <span class="total-discount--amount">{{ total_discounts | money }}</span>
+        </p>
+      {% endif %}
+
       {% assign transaction_size = 0 %}
+      {% assign transaction_amount = 0 %}
       {% for transaction in transactions %}
         {% unless transaction.kind == "capture" or transaction.kind == "void" %}
           {% assign transaction_size = transaction_size | plus: 1 %}
+          {% assign transaction_amount = transaction_amount | plus: transaction.amount %}
         {% endunless %}
       {% endfor %}
 
-      {% if transaction_size > 1 %}
+      {% if transaction_size > 1 or transaction_amount < total_price %}
         <table class="row subtotal-table">
           <tr><td colspan="2" class="subtotal-table__line"></td></tr>
           <tr><td colspan="2" class="subtotal-table__small-space"></td></tr>
@@ -232,7 +328,7 @@
               {% if transaction.payment_details.credit_card_company %}
                 {% capture transaction_name %}{{ transaction.payment_details.credit_card_company }} (ending in {{ transaction.payment_details.credit_card_last_four_digits }}){% endcapture %}
               {% else %}
-                {% capture transaction_name %}{{ transaction.gateway | replace: "_", " " | capitalize }}{% endcapture %}
+                {% capture transaction_name %}{{ transaction.gateway_display_name }}{% endcapture %}
               {% endif %}
 
               
@@ -346,7 +442,8 @@
           <table class="container">
             <tr>
               <td>
-                <p style="color:#000">Come back soon or visit <a href="{{ shop.url }}" class="link__text">our online store</a>.</p>
+
+                <p style="color:#000">Come back or visit <a href="{{ shop.url }}">our online store</a>.</p>
               </td>
             </tr>
           </table>
@@ -363,6 +460,7 @@
         <table class="container">
           <tr>
             <td>
+              
               <p class="disclaimer__subtext">If you have any questions, reply to this email or contact us at <a href="mailto:{{ shop.email }}">{{ shop.email }}</a></p>
             </td>
           </tr>

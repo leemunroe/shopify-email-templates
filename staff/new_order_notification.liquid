@@ -1,0 +1,26 @@
+<!--
+  New order
+  Sent to order notification subscribers when a customer places an order.
+  Subject: [{{shop_name}}] Order {{ name }}{% if customer.name %} placed by {{ customer.name }}{% endif %}{% if has_high_risks? %} (Risk of fraud){% endif %}
+-->
+{{ shop_name }},
+
+{{ billing_address.name }} placed a new order with you today ({{ date | date: "%b %d %I:%M%p" }}). 
+
+Payment method:
+  {{ gateway }}{% if requires_shipping %}
+
+Delivery method: 
+  {% for shipping_method in shipping_methods %}{{ shipping_method.title }}
+  {% endfor %}
+Shipping address:
+  {{ shipping_address.name }}
+  {{ shipping_address.street }}
+  {{ shipping_address.city }}, {{ shipping_address.province }}  {{ shipping_address.zip }}
+  {{ shipping_address.country }}
+  {{ shipping_address.phone }}{% endif %}
+
+
+{% for line in line_items %}{{ line.quantity }}x {{line.product.title }} for {{ line.price | money }} each
+ {% for property in line.properties %}{% if property.last == 'I like it As Is' %}{% assign lovinit = true %}{% endif %}{% endfor %}
+{% if lovinit %}In my size, as is{% else %}({{ line.variant.option1 }}{% if line.product.tags contains 'Custom' %} buttons, {% for property in line.properties %}{% unless property.last == 'Customize' %}{{ property.last }} {{ property.first }}{% if forloop.last %}.{% else %}, {% endif %}{% endunless %}{% endfor %}{% endif %}){% endif %}{% endfor %}
