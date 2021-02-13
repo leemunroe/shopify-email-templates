@@ -1,6 +1,8 @@
-{% capture email_title %}Reset your password{% endcapture %}
-{% capture email_body %}Follow this link to reset your customer account password at <a href="{{shop.url}}">{{shop.name}}</a>. If you didn't request a new password, you can safely delete this email.{% endcapture %}
-
+<!--
+  Contact customer
+  Sent to the customer when you contact them from the orders or customers page. You can edit this email before you send it.
+  Subject: Message from {{ shop.name }}
+-->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -59,28 +61,7 @@
           <tr>
             <td>
               
-            <h2>{{ email_title }}</h2>
-            <p>{{ email_body }}</p>
-            <table class="row actions">
-  <tr>
-    <td class="actions__cell">
-      <table class="button main-action-cell">
-        <tr>
-          <td class="button__cell"><a href="{{ customer.reset_password_url }}" class="button__text">Reset your password</a></td>
-        </tr>
-      </table>
-      {% if shop.url %}
-    <table class="link secondary-action-cell">
-      <tr>
-        <td class="link__cell"><a href="{{ shop.url }}" class="link__text"><span class='or'>or</span> Visit our store</a></td>
-      </tr>
-    </table>
-{% endif %}
-
-    </td>
-  </tr>
-</table>
-
+            <p>{{ custom_message }}</p>
 
             </td>
           </tr>
@@ -96,6 +77,7 @@
         <table class="container">
           <tr>
             <td>
+              
               <p class="disclaimer__subtext">If you have any questions, reply to this email or contact us at <a href="mailto:{{ shop.email }}">{{ shop.email }}</a></p>
             </td>
           </tr>

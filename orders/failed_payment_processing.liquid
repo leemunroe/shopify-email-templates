@@ -1,5 +1,12 @@
-{% capture email_title %} Activate your account {% endcapture %}
-{% capture email_body %}Hi {{ customer.first_name }}, you've created a new customer account at <a href="{{shop.url}}">{{shop.name}}</a>. All you have to do is activate it and choose a password. {% endcapture %}
+<!--
+  Payment error
+  Sent automatically to the customer if their payment can’t be processed.
+  Subject: [{{shop.name}}] Payment couldn’t be processed
+-->
+{% capture email_title %} Your payment couldn’t be processed {% endcapture %}
+{% capture email_body %}
+  You added items to your shopping cart but the payment couldn’t be processed. You haven’t been charged.
+{% endcapture %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -60,23 +67,29 @@
             <td>
               
             <h2>{{ email_title }}</h2>
-            {% if custom_message != blank %}
-              <p>{{ custom_message }}</p>
-            {% else %}
-              <p>{{ email_body }}</p>
-            {% endif %}
-            <table class="row actions">
+            <p>{{ email_body }}</p>
+            <p> You can still return to your cart to complete your purchase. </p>
+            {% if shop.url %}
+              <table class="row actions">
+                <tr>
+                  <td class="actions__cell">
+                    <table class="button main-action-cell">
+                      <tr>
+                        <table class="row actions">
+  <tr>
+    <td class="empty-line"> </td>
+  </tr>
   <tr>
     <td class="actions__cell">
       <table class="button main-action-cell">
         <tr>
-          <td class="button__cell"><a href="{{ customer.account_activation_url }}" class="button__text">Activate your account</a></td>
+          <td class="button__cell"><a href="{{ url }}" class="button__text">Return to cart</a></td>
         </tr>
       </table>
       {% if shop.url %}
     <table class="link secondary-action-cell">
       <tr>
-        <td class="link__cell"><a href="{{ shop.url }}" class="link__text"><span class='or'>or</span> Visit our store</a></td>
+        <td class="link__cell">or <a href="{{ shop.url }}">Visit our store</a></td>
       </tr>
     </table>
 {% endif %}
@@ -85,6 +98,12 @@
   </tr>
 </table>
 
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            {% endif %}
 
             </td>
           </tr>
@@ -100,6 +119,7 @@
         <table class="container">
           <tr>
             <td>
+              
               <p class="disclaimer__subtext">If you have any questions, reply to this email or contact us at <a href="mailto:{{ shop.email }}">{{ shop.email }}</a></p>
             </td>
           </tr>

@@ -1,19 +1,31 @@
-
-{% if fulfillment.item_count == item_count %}   {% capture shipment_name %}Your order has been{% endcapture %}
-{% elsif fulfillment.item_count > 1 %}   {% if fulfillment_status == 'fulfilled' %}
-    {% capture shipment_name %}The last items in your order have been{% endcapture %}
+<!--
+  Delivered
+  Sent to the customer automatically after orders with tracking information are delivered.
+  Subject: A shipment from order {{ name }} has been delivered
+-->
+{% if fulfillment.item_count == item_count %} 
+  {% capture email_title %}Your order is out for delivery{% endcapture %}
+  {% capture email_body %}Your order is out for delivery. Track your shipment to see the delivery status.{% endcapture %}
+{% elsif fulfillment.item_count > 1 %} 
+  {% if fulfillment_status == 'fulfilled' %}
+    {% capture email_title %}The last items in your order are out for delivery{% endcapture %}
+    {% capture email_body %}The last items in your order are out for delivery. Track your shipment to see the delivery status.{% endcapture %}
   {% else %}
-    {% capture shipment_name %}Some items in your order have been{% endcapture %}
+    {% capture email_title %}Some items in your order are out for delivery{% endcapture %}
+    {% capture email_body %}Some items in your order are out for delivery. Track your shipment to see the delivery status.{% endcapture %}
   {% endif %}
-{% else %}   {% if fulfillment_status == 'fulfilled' %}
-    {% capture shipment_name %}The last item in your order has been{% endcapture %}
+{% else %} 
+  {% if fulfillment_status == 'fulfilled' %}
+    {% capture email_title %}The last item in your order is out for delivery{% endcapture %}
+    {% capture email_body %}The last item in your order is out for delivery. Track your shipment to see the delivery status.{% endcapture %}
   {% else %}
-    {% capture shipment_name %}One item in your order has been{% endcapture %}
+    {% capture email_title %}One item in your order is out for delivery{% endcapture %}
+    {% capture email_body %}One item in your order is out for delivery. Track your shipment to see the delivery status.{% endcapture %}
   {% endif %}
 {% endif %}
 
-{% capture email_title %}{{ shipment_name }} delivered{% endcapture %}
-{% capture email_body %}{{ shipment_name }} delivered. Track your shipment to see the delivery status.{% endcapture %}
+
+{% capture email_emphasis %}Estimated delivery date: <strong>{{fulfillment.estimated_delivery_at | date: "%B %-d, %Y"}}</strong>{% endcapture %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -79,27 +91,26 @@
             <td>
               
             <h2>{{ email_title }}</h2>
-            <table class="text-icon-container">
-              <tr class="text-icon-row">
-                <td class="text-icon"><img src="{{ 'notifications/question.png' | shopify_asset_url }}" class="text-icon__image"></td>
-                <td class="text">
-                  <p>Haven't received your package yet? <a href="mailto:{{ shop.email }}">Let us know</a></p>
-                </td>
-              </tr>
-            </table>
+            <p>{{ email_body }}</p>
+            {% if fulfillment.estimated_delivery_at %}
+              <p>{{ email_emphasis }}</p>
+            {% endif %}
             {% if order_status_url %}
               <table class="row actions">
+  <tr>
+    <td class="empty-line"> </td>
+  </tr>
   <tr>
     <td class="actions__cell">
       <table class="button main-action-cell">
         <tr>
-          <td class="button__cell"><a href="{{ order_status_url }}" class="button__text">View your order</a></td>
+          <td class="button__cell"><a href="{{ order_status_url }}" class="button__text">Track my shipment</a></td>
         </tr>
       </table>
       {% if shop.url %}
     <table class="link secondary-action-cell">
       <tr>
-        <td class="link__cell"><a href="{{ shop.url }}" class="link__text"><span class='or'>or</span> Visit our store</a></td>
+        <td class="link__cell">or <a href="{{ shop.url }}">Visit our store</a></td>
       </tr>
     </table>
 {% endif %}
@@ -124,6 +135,22 @@
 {% endif %}
 
             {% endif %}
+            {% if fulfillment.tracking_numbers.size > 0 %}
+  <p class="disclaimer__subtext">
+    <br/>
+    {% if fulfillment.tracking_numbers.size == 1 and fulfillment.tracking_company and fulfillment.tracking_url %}
+      {{ fulfillment.tracking_company }} tracking number: <a href="{{ fulfillment.tracking_url }}">{{ fulfillment.tracking_numbers.first }}</a>
+    {% elsif fulfillment.tracking_numbers.size == 1 %}
+      Tracking number: {{ fulfillment.tracking_numbers.first }}
+    {% else %}
+      Tracking numbers:<br />
+      {% for tracking_number in fulfillment.tracking_numbers %}
+        {{ tracking_number }}<br />
+      {% endfor %}
+    {% endif %}
+  </p>
+{% endif %}
+
 
             </td>
           </tr>
@@ -160,10 +187,10 @@
           {% endif %}
         </td>
         <td class="order-list__product-description-cell">
-          {% if line.line_item.product.title %}
-            {% assign line_title = line.line_item.product.title %}
-          {% else %}
-            {% assign line_title = line.line_item.title %}
+          {% if line.line_item.product.title %}	
+            {% assign line_title = line.line_item.product.title %}	
+          {% else %}	
+            {% assign line_title = line.line_item.title %}	
           {% endif %}
 
           {% if line.quantity < line.line_item.quantity %}
@@ -172,10 +199,32 @@
             {% assign line_display = line.line_item.quantity  %}
           {% endif %}
 
-          <span class="order-list__item-title">{{ line_title }} × {{ line_display }}</span><br/>
+          <span class="order-list__item-title">{{ line_title }} × {{ line_display }}</span><br/>
 
           {% if line.line_item.variant.title != 'Default Title' %}
-            <span class="order-list__item-variant">{{ line.line_item.variant.title }}</span>
+            <span class="order-list__item-variant">{{ line.line_item.variant.title }}</span><br/>
+          {% endif %}
+
+          {% if line.line_item.selling_plan_allocation %}
+            <span class="order-list__item-variant">{{ line.line_item.selling_plan_allocation.selling_plan.name }}</span><br/>
+          {% endif %}
+
+          {% if line.line_item.refunded_quantity > 0 %}
+            <span class="order-list__item-refunded">Refunded</span>
+          {% endif %}
+
+          {% if line.line_item.discount_allocations %}
+            {% for discount_allocation in line.line_item.discount_allocations %}
+              {% if discount_allocation.discount_application.target_selection != 'all' %}
+                <span class="order-list__item-discount-allocation">
+                  <img src="{{ 'notifications/discounttag.png' | shopify_asset_url }}" width="18" height="18" class="discount-tag-icon" />
+                  <span>
+                    {{ discount_allocation.discount_application.title | upcase }}
+                    (-{{ discount_allocation.amount | money }})
+                  </span>
+                </span>
+              {% endif %}
+            {% endfor %}
           {% endif %}
         </td>
       </table>
@@ -199,6 +248,7 @@
         <table class="container">
           <tr>
             <td>
+              
               <p class="disclaimer__subtext">If you have any questions, reply to this email or contact us at <a href="mailto:{{ shop.email }}">{{ shop.email }}</a></p>
             </td>
           </tr>

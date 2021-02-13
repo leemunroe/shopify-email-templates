@@ -1,0 +1,40 @@
+<!--
+  Fulfillment request
+  Sent automatically to a third-party fulfillment service provider when order items are fulfilled.
+  Subject: Order fulfillment request for {{ shop_name }}
+-->
+{{ service_name }},
+
+Please fulfill order {{ name }}:
+Total No. of all items: {{ items_to_fulfill_count }}
+No. of different items: {{ items_to_fulfill | size }}
+{% for item in items_to_fulfill %}
+  Variant Title: {{ item.title }}
+  SKU: {{ item.sku }}
+  Quantity: {{ item.quantity }}
+  Grams: {{ item.grams }}
+  Vendor: {{ item.vendor }}
+
+{% endfor %}{% if shipping_address %}
+Shipping Address:
+
+{{ shipping_address.name }}{% if shipping_address.company %}
+  {{ shipping_address.company }}{% endif %}
+{{ shipping_address.address1 }}
+{{ shipping_address.address2 }}
+{{ shipping_address.city }}, {{ shipping_address.province }}
+{{ shipping_address.zip }}
+{{ shipping_address.country }}
+{% if shipping_address.phone %}  Phone: {{ shipping_address.phone }}{% endif %}{% endif %}
+
+Shipping Method:
+{% if shipping_method %}{{ shipping_method.title }}{% else %}None{% endif %}
+
+Tracking Number:
+{% if fulfillment.tracking_number %}{{ fulfillment.tracking_number }}{% else %}None{% endif %}
+
+Customer Email:
+{{ email }}
+
+Thank you,
+{{ shop_name }}

@@ -1,3 +1,15 @@
+<!--
+  Customer payment method update request
+  Sent to the customer when they ask to update their stored payment method.
+  Subject: Edit your payment details
+-->
+{% capture email_title %}Edit your payment details{% endcapture %}
+{% capture email_body %}
+  Follow the link to edit your payment details for subscription orders at
+  <a href="{{shop.url}}">{{shop.name}}</a>.
+  If you didn't request a change to your payment method, you can safely delete this email.
+{% endcapture %}
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -56,7 +68,22 @@
           <tr>
             <td>
               
-            <p>{{ custom_message }}</p>
+            <h2>{{ email_title }}</h2>
+            <p>{{ email_body }}</p>
+            <table class="row actions">
+              <tr>
+                <td class="empty-line"> </td>
+              </tr>
+              <tr>
+                <td class="actions__cell">
+                  <table class="button main-action-cell">
+                    <tr>
+                      <td class="button__cell"><a href="{{ email_confirmation_url }}" class="button__text">Edit payment details</a></td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
 
             </td>
           </tr>
@@ -72,6 +99,7 @@
         <table class="container">
           <tr>
             <td>
+              
               <p class="disclaimer__subtext">If you have any questions, reply to this email or contact us at <a href="mailto:{{ shop.email }}">{{ shop.email }}</a></p>
             </td>
           </tr>
